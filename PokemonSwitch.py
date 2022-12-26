@@ -2145,7 +2145,6 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                         group_namelen = readlong(trmsh)
                                         group_name = readfixedstring(trmsh, group_namelen)
                                         
-                                        print(group_name)
                                         
                                         fseek(trmsh, groupoffset_array[y] + group_structptrparammorph)
                                         group_morphoffset = ftell(trmsh) + readlong(trmsh)
@@ -2159,7 +2158,6 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                             group_namemorphstruct = ftell(trmsh) - readlong(trmsh)
                                             fseek(trmsh, group_namemorphstruct)
                                             group_namemorphstructlen = readshort(trmsh)
-                                            print(hex(group_namemorphstructlen) + ' ' + str(group_namemorphstructlen))
                                             if group_namemorphstructlen == 0x000A:
                                                 group_namemorphstructsectionlen = readshort(trmsh)
                                                 group_namemorphstructptrparamid = readshort(trmsh)
@@ -2182,7 +2180,6 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                         group_struct = ftell(trmbf) - readlong(trmbf)
                                         fseek(trmbf, group_struct)
                                         group_structlen = readshort(trmbf)
-                                        print(hex(group_structlen) + ' ' + str(group_structlen))
                                         if group_structlen == 0x0006:
                                             group_structsectionlen = readshort(trmbf)
                                             group_structptrparam = readshort(trmbf)
@@ -2199,13 +2196,8 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                             morphgroupoffset = ftell(trmbf) + readlong(trmbf)
                                             groupret = ftell(trmbf)
                                             fseek(trmbf, morphgroupoffset)
-                                            print(f"Group morph {y} start: {groupret}")
-                                            print(f"Group morph {y} start: {groupret}")
-                                            print(f"Group morph {y} start: {groupret}")
-                                            print(f"Group morph {y} start: {groupret}")
-                                            print(f"Group morph {y} start: {groupret}")
+                                            print(f"Group morph {y} start: {ftell(trmbf)}")
                                             bufferstruct = ftell(trmbf) - readlong(trmbf)
-                                            print(bufferstruct)
                                             fseek(trmbf, bufferstruct)
                                             morphbufferstructlen = readshort(trmbf)
                                             if morphbufferstructlen == 0x0006:
@@ -2218,18 +2210,15 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                             morphbuffergroupsuboffset = ftell(trmbf) + readlong(trmbf)
                                             morphbuffergroupsbytecount = readlong(trmbf)
                                             if y == 1:
-                                                for v in range(groupoffset // 0x04):
+                                                for v in range(morphbuffergroupsbytecount // 0x04):
                                                     morphvertid = readlong(trmbf) + 1
                                                     morphvertsids_array.append(morphvertid)
                                                 else:
-                                                    morphvert_array = []
-                                                    morphnormal_array = []
-                                                    
-                                                    for v in range(vert_array):
-                                                        morphvert_array.append(vert_array[v])
-                                                        morphnormal_array.append(normal_array[y])
-                                                    
-                                                    for v in range(morphbuffergroupsbytecount // 0x1C):
+                                                    print(f"Vertex buffer {x} morph {y} start: {hex(ftell(trmbf))}")
+                                                    MorphVert_array = []
+                                                    MorphNormal_array = []
+                                                    for v in range(int(vert_buffer_byte_count / 0x1C)):
+                                                        #Morphs always seem to use this setup.
                                                         vx = readfloat(trmbf)
                                                         vy = readfloat(trmbf)
                                                         vz = readfloat(trmbf)
@@ -2241,9 +2230,12 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                                         tany = readhalffloat(trmbf)
                                                         tanz = readhalffloat(trmbf)
                                                         tanq = readhalffloat(trmbf)
-                                                        if morphvertsids_array[v] != 0:
-                                                            morphvert_array[morphvertsids_array[v]] = [vert_array[morphvertsids_array[v]].x + vx, vert_array[morphvertsids_array[v]].y + vy, vert_array[morphvertsids_array[v]].z + vz]
-                                                            morphnormal_array[morphvertsids_array[v]] = [normal_array[morphvertsids_array[v]].x + nx, normal_array[morphvertsids_array[v]].y + ny, normal_array[morphvertsids_array[v]].z + nz]
+                                                        MorphVert_array.append((vx, vy, vz))
+                                                        MorphNormal_array.append((nx, ny, nz))
+                                                    print(f"Vertex buffer {x} morph {y} end: {hex(ftell(trmbf))}")
+                                                    Morphs_array.append(MorphVert_array)
+                                            fseek(trmbf, groupret)
+                                        fseek(trmbf, group_ret)
                             fseek(trmbf, vert_buffer_ret)                                                          
 
                             print("Making object...")
@@ -2286,6 +2278,7 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                     for m in range(len(MorphName_array)):
                                         sk = new_object.shape_key_add(name=MorphName_array[m])
                                         for i in range(len(Morphs_array[m])):
+                                            print(str(range(len(Morphs_array[m]))) + ' ' + str(range(len(sk.data))))
                                             sk.data[i].co = Morphs_array[m][i]
 
                                 if bone_structure != None:
@@ -2376,7 +2369,7 @@ def readshort(file):
 # SIGNED!!!!
 def readlong(file):
     bytes_data = file.read(4)
-    # print(f"readlong: {bytes_data}")
+    #print(f"readlong: {bytes_data}")
     return int.from_bytes(bytes_data, byteorder='little', signed=True)
 
 
@@ -2390,12 +2383,12 @@ def readhalffloat(file):
 
 def readfixedstring(file, length):
     bytes_data = file.read(length)
-    # print(f"readfixedstring ({length}): {bytes_data}")
+    #print(f"readfixedstring ({length}): {bytes_data}")
     return bytes_data.decode('utf-8')
 
 
 def fseek(file, offset):
-    # print(f"Seeking to {offset}")
+    #print(f"Seeking to {offset}")
     file.seek(offset)
 
 
