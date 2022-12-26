@@ -1851,6 +1851,46 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                             else:
                                 raise AssertionError("Unexpected vertex buffer struct length!")
 
+                            if vert_buffer_struct_ptr_faces != 0:
+                                fseek(trmbf, vert_buffer_offset + vert_buffer_struct_ptr_faces)
+                                face_buffer_start = ftell(trmbf) + readlong(trmbf); fseek(trmbf, face_buffer_start)
+                                face_buffer_count = readlong(trmbf)
+
+                                for y in range(face_buffer_count):
+                                    face_buff_offset = ftell(trmbf) + readlong(trmbf)
+                                    face_buff_ret = ftell(trmbf)
+                                    fseek(trmbf, face_buff_offset)
+                                    print(f"Facepoint {x} header: {hex(ftell(trmbf))}")
+                                    face_buff_struct = ftell(trmbf) - readlong(trmbf); fseek(trmbf, face_buff_struct)
+                                    face_buff_struct_len = readshort(trmbf)
+
+                                    if face_buff_struct_len != 0x0006:
+                                        raise AssertionError("Unexpected face buffer struct length!")
+                                    face_buffer_struct_section_length = readshort(trmbf)
+                                    face_buffer_struct_ptr = readshort(trmbf)
+
+                                    if face_buffer_struct_ptr != 0:
+                                        fseek(trmbf, face_buff_offset + face_buffer_struct_ptr)
+                                        facepoint_start = ftell(trmbf) + readlong(trmbf); fseek(trmbf, facepoint_start)
+                                        facepoint_byte_count = readlong(trmbf)
+                                        print(f"Facepoint {x} start: {hex(ftell(trmbf))}")
+
+                                        if len(vert_array) > 65536: # is this a typo? I would imagine it to be 65535
+                                            for v in range(facepoint_byte_count // 12):
+                                                fa = readlong(trmbf)
+                                                fb = readlong(trmbf)
+                                                fc = readlong(trmbf)
+                                                face_array.append([fa, fb, fc])
+                                        else:
+                                            for v in range(facepoint_byte_count // 6):
+                                                fa = readshort(trmbf)
+                                                fb = readshort(trmbf)
+                                                fc = readshort(trmbf)
+                                                face_array.append([fa, fb, fc])
+                                        print(f"Facepoint {x} end: {hex(ftell(trmbf))}")
+                                    fseek(trmbf, face_buff_ret)
+                            
+
                             if vert_buffer_struct_ptr_verts != 0:
                                 fseek(trmbf, vert_buffer_offset + vert_buffer_struct_ptr_verts)
                                 vert_buffer_sub_start = ftell(trmbf) + readlong(trmbf); fseek(trmbf, vert_buffer_sub_start)
@@ -2079,51 +2119,13 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                             #TODO: Continue implementing after line 3814
                                     fseek(trmbf,vert_buffer_sub_ret)
 
-                            if vert_buffer_struct_ptr_faces != 0:
-                                fseek(trmbf, vert_buffer_offset + vert_buffer_struct_ptr_faces)
-                                face_buffer_start = ftell(trmbf) + readlong(trmbf); fseek(trmbf, face_buffer_start)
-                                face_buffer_count = readlong(trmbf)
-
-                                for y in range(face_buffer_count):
-                                    face_buff_offset = ftell(trmbf) + readlong(trmbf)
-                                    face_buff_ret = ftell(trmbf)
-                                    fseek(trmbf, face_buff_offset)
-                                    print(f"Facepoint {x} header: {hex(ftell(trmbf))}")
-                                    face_buff_struct = ftell(trmbf) - readlong(trmbf); fseek(trmbf, face_buff_struct)
-                                    face_buff_struct_len = readshort(trmbf)
-
-                                    if face_buff_struct_len != 0x0006:
-                                        raise AssertionError("Unexpected face buffer struct length!")
-                                    face_buffer_struct_section_length = readshort(trmbf)
-                                    face_buffer_struct_ptr = readshort(trmbf)
-
-                                    if face_buffer_struct_ptr != 0:
-                                        fseek(trmbf, face_buff_offset + face_buffer_struct_ptr)
-                                        facepoint_start = ftell(trmbf) + readlong(trmbf); fseek(trmbf, facepoint_start)
-                                        facepoint_byte_count = readlong(trmbf)
-                                        print(f"Facepoint {x} start: {hex(ftell(trmbf))}")
-
-                                        if len(vert_array) > 65536: # is this a typo? I would imagine it to be 65535
-                                            for v in range(facepoint_byte_count // 12):
-                                                fa = readlong(trmbf)
-                                                fb = readlong(trmbf)
-                                                fc = readlong(trmbf)
-                                                face_array.append([fa, fb, fc])
-                                        else:
-                                            for v in range(facepoint_byte_count // 6):
-                                                fa = readshort(trmbf)
-                                                fb = readshort(trmbf)
-                                                fc = readshort(trmbf)
-                                                face_array.append([fa, fb, fc])
-                                        print(f"Facepoint {x} end: {hex(ftell(trmbf))}")
-                                    fseek(trmbf, face_buff_ret)
-                            fseek(trmbf, vert_buffer_ret)
 
                             if vert_buffer_struct_ptr_groups != 0:
                                 fseek(trmbf, vert_buffer_offset + vert_buffer_struct_ptr_groups)
                                 group_start = ftell(trmbf) + readlong(trmbf); fseek(trmbf, group_start)
                                 group_count = readlong(trmbf)
                                 if group_count > 0:
+                                    MorphNameNext = 1
                                     for y in range(group_count):
                                         fseek(trmsh, groupoffset_array[y])
                                         group_namestruct = ftell(trmsh) - readlong(trmsh)
@@ -2142,7 +2144,9 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                         fseek(trmsh, group_nameoffset)
                                         group_namelen = readlong(trmsh)
                                         group_name = readfixedstring(trmsh, group_namelen)
+                                        
                                         print(group_name)
+                                        
                                         fseek(trmsh, groupoffset_array[y] + group_structptrparammorph)
                                         group_morphoffset = ftell(trmsh) + readlong(trmsh)
                                         fseek(trmsh, group_morphoffset)
@@ -2195,7 +2199,11 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                             morphgroupoffset = ftell(trmbf) + readlong(trmbf)
                                             groupret = ftell(trmbf)
                                             fseek(trmbf, morphgroupoffset)
-                                            print(f"Group morph {y} start: {ftell(trmbf)}")
+                                            print(f"Group morph {y} start: {groupret}")
+                                            print(f"Group morph {y} start: {groupret}")
+                                            print(f"Group morph {y} start: {groupret}")
+                                            print(f"Group morph {y} start: {groupret}")
+                                            print(f"Group morph {y} start: {groupret}")
                                             bufferstruct = ftell(trmbf) - readlong(trmbf)
                                             print(bufferstruct)
                                             fseek(trmbf, bufferstruct)
