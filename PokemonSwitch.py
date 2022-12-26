@@ -2214,9 +2214,14 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                                     morphvertid = readlong(trmbf) + 1
                                                     morphvertsids_array.append(morphvertid)
                                                 else:
-                                                    print(f"Vertex buffer {x} morph {y} start: {hex(ftell(trmbf))}")
                                                     MorphVert_array = []
                                                     MorphNormal_array = []
+                                                    for v in range(len(vert_array)):
+                                                        MorphVert_array.append(vert_array[v])
+                                                        MorphNormal_array.append(normal_array[v])
+                                                        
+                                                    print(f"Vertex buffer {x} morph {y} start: {hex(ftell(trmbf))}")
+
                                                     for v in range(int(vert_buffer_byte_count / 0x1C)):
                                                         #Morphs always seem to use this setup.
                                                         vx = readfloat(trmbf)
@@ -2230,10 +2235,14 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                                         tany = readhalffloat(trmbf)
                                                         tanz = readhalffloat(trmbf)
                                                         tanq = readhalffloat(trmbf)
-                                                        MorphVert_array.append((vx, vy, vz))
-                                                        MorphNormal_array.append((nx, ny, nz))
-                                                    print(f"Vertex buffer {x} morph {y} end: {hex(ftell(trmbf))}")
+                                                        if morphvertsids_array[v] != 0:
+                                                            MorphVert_array[morphvertsids_array[v]] = [vert_array[morphvertsids_array[v]].x + vx, vert_array[morphvertsids_array[v]].y + vy, vert_array[morphvertsids_array[v]].z + vz]
+                                                            MorphNormal_array[morphvertsids_array[v]] = [normal_array[morphvertsids_array[v]].x + nx, normal_array[morphvertsids_array[v]].y + ny, normal_array[morphvertsids_array[v]].z + nz]
+                                                    print(f"Group {x} morph {y} end: {hex(ftell(trmbf))}")
                                                     Morphs_array.append(MorphVert_array)
+                                                    
+                                             
+                                                    
                                             fseek(trmbf, groupret)
                                         fseek(trmbf, group_ret)
                             fseek(trmbf, vert_buffer_ret)                                                          
@@ -2278,7 +2287,6 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                     for m in range(len(MorphName_array)):
                                         sk = new_object.shape_key_add(name=MorphName_array[m])
                                         for i in range(len(Morphs_array[m])):
-                                            print(str(range(len(Morphs_array[m]))) + ' ' + str(range(len(sk.data))))
                                             sk.data[i].co = Morphs_array[m][i]
 
                                 if bone_structure != None:
