@@ -257,8 +257,7 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
 
     # TODO create bone_rig_array
     # LINE 1247
-    if chara_check == "Rei" or chara_check == "Akari":
-        trskl = trskl = open(os.path.join(filep, "p0_base.trskl"), "rb")
+    
     
     if trskl is not None:
         print("Parsing TRSKL...")
@@ -347,6 +346,80 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                         print(f"BoneMerge to {bone_merge_string}")
                     else: bone_merge_string = ""
 
+                if chara_check == "Rei" or chara_check == "Akari":
+                    bone_array.append("foot_base")
+                    bone_array.append("waist")
+                    bone_array.append("spine_01")
+                    bone_array.append("spine_02")
+                    bone_array.append("spine_03")
+                    bone_array.append("neck")
+                    bone_array.append("look")
+                    bone_array.append("head")
+                    bone_array.append("left_shoulder")
+                    bone_array.append("left_arm_width")
+                    bone_array.append("left_arm_01")
+                    bone_array.append("left_arm_02")
+                    bone_array.append("left_hand")
+                    bone_array.append("left_thumb_01")
+                    bone_array.append("left_thumb_02")
+                    bone_array.append("left_thumb_03")
+                    bone_array.append("left_index_01")
+                    bone_array.append("left_index_02")
+                    bone_array.append("left_index_03")
+                    bone_array.append("left_middle_01")
+                    bone_array.append("left_middle_02")
+                    bone_array.append("left_middle_03")
+                    bone_array.append("left_ring_01")
+                    bone_array.append("left_ring_02")
+                    bone_array.append("left_ring_03")
+                    bone_array.append("left_pinky_01")
+                    bone_array.append("left_pinky_02")
+                    bone_array.append("left_pinky_03")
+                    bone_array.append("left_attach_off")
+                    bone_array.append("left_attach_on")
+                    bone_array.append("left_hand_roll")
+                    bone_array.append("left_arm_02_sub")
+                    bone_array.append("left_arm_02_roll")
+                    bone_array.append("left_arm_01_roll")
+                    bone_array.append("right_shoulder")
+                    bone_array.append("right_arm_width")
+                    bone_array.append("right_arm_01")
+                    bone_array.append("right_arm_02")
+                    bone_array.append("right_hand")
+                    bone_array.append("right_thumb_01")
+                    bone_array.append("right_thumb_02")
+                    bone_array.append("right_thumb_03")
+                    bone_array.append("right_index_01")
+                    bone_array.append("right_index_02")
+                    bone_array.append("right_index_03")
+                    bone_array.append("right_middle_01")
+                    bone_array.append("right_middle_02")
+                    bone_array.append("right_middle_03")
+                    bone_array.append("right_ring_01")
+                    bone_array.append("right_ring_02")
+                    bone_array.append("right_ring_03")
+                    bone_array.append("right_pinky_01")
+                    bone_array.append("right_pinky_02")
+                    bone_array.append("right_pinky_03")
+                    bone_array.append("right_attach_off")
+                    bone_array.append("right_attach_on")
+                    bone_array.append("right_hand_roll")
+                    bone_array.append("right_arm_02_sub")
+                    bone_array.append("right_arm_02_roll")
+                    bone_array.append("right_arm_01_roll")
+                    bone_array.append("hips")
+                    bone_array.append("leg_width")
+                    bone_array.append("left_leg_01")
+                    bone_array.append("left_leg_02")
+                    bone_array.append("left_foot")
+                    bone_array.append("left_toe")
+                    bone_array.append("left_leg_02_sub")
+                    bone_array.append("right_leg_01")
+                    bone_array.append("right_leg_02")
+                    bone_array.append("right_foot")
+                    bone_array.append("right_toe")
+                    bone_array.append("right_leg_02_sub")
+
                 if trskl_bone_struct_ptr_bone != 0:
                     fseek(trskl, bone_offset + trskl_bone_struct_ptr_bone)
                     bone_pos_start = ftell(trskl) + readlong(trskl); fseek(trskl, bone_pos_start)
@@ -413,7 +486,7 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                         else:
                             bone_rig_array.append(bone_name)
                             bone_id_map[len(bone_rig_array) - 1] = bone_name
-
+                        
                         bone_array.append(new_bone)
                 fseek(trskl, bone_ret)
         fclose(trskl)
@@ -2173,7 +2246,7 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                             MorphName_array.append(group_morphname)
                                             fseek(trmsh, group_morhpnameret)
                                         
-                                        morphvertsids_array = []
+                                        MorphVertIDs_array = []
                                         group_offset = ftell(trmbf) + readlong(trmbf)
                                         group_ret = ftell(trmbf)
                                         fseek(trmbf, group_offset)
@@ -2209,40 +2282,35 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                             fseek(trmbf, morphgroupoffset + morphbufferstructptrparam)
                                             morphbuffergroupsuboffset = ftell(trmbf) + readlong(trmbf)
                                             morphbuffergroupsbytecount = readlong(trmbf)
-                                            if y == 1:
+                                            if y == 0:
                                                 for v in range(morphbuffergroupsbytecount // 0x04):
-                                                    morphvertid = readlong(trmbf) + 1
-                                                    morphvertsids_array.append(morphvertid)
-                                                else:
-                                                    MorphVert_array = []
-                                                    MorphNormal_array = []
-                                                    for v in range(len(vert_array)):
-                                                        MorphVert_array.append(vert_array[v])
-                                                        MorphNormal_array.append(normal_array[v])
-                                                        
-                                                    print(f"Vertex buffer {x} morph {y} start: {hex(ftell(trmbf))}")
-
-                                                    for v in range(int(vert_buffer_byte_count / 0x1C)):
-                                                        #Morphs always seem to use this setup.
-                                                        vx = readfloat(trmbf)
-                                                        vy = readfloat(trmbf)
-                                                        vz = readfloat(trmbf)
-                                                        nx = readhalffloat(trmbf)
-                                                        ny = readhalffloat(trmbf)
-                                                        nz = readhalffloat(trmbf)
-                                                        nq = readhalffloat(trmbf)
-                                                        tanx = readhalffloat(trmbf)
-                                                        tany = readhalffloat(trmbf)
-                                                        tanz = readhalffloat(trmbf)
-                                                        tanq = readhalffloat(trmbf)
-                                                        if morphvertsids_array[v] != 0:
-                                                            MorphVert_array[morphvertsids_array[v]] = [vert_array[morphvertsids_array[v]].x + vx, vert_array[morphvertsids_array[v]].y + vy, vert_array[morphvertsids_array[v]].z + vz]
-                                                            MorphNormal_array[morphvertsids_array[v]] = [normal_array[morphvertsids_array[v]].x + nx, normal_array[morphvertsids_array[v]].y + ny, normal_array[morphvertsids_array[v]].z + nz]
-                                                    print(f"Group {x} morph {y} end: {hex(ftell(trmbf))}")
-                                                    Morphs_array.append(MorphVert_array)
-                                                    
-                                             
-                                                    
+                                                    MorphVertID = readlong(trmbf) + 1
+                                                    MorphVertIDs_array.append(MorphVertID)
+                                            else:
+                                                MorphVert_array = []
+                                                MorphNormal_array = []
+                                                for v in range(len(vert_array)):
+                                                    MorphVert_array.append(vert_array[v])
+                                                    MorphNormal_array.append(normal_array[v])
+                                                for v in range(morphbuffergroupsbytecount // 0x1C):
+                                                    #Morphs always seem to use this setup.
+                                                    vx = readfloat(trmbf)
+                                                    vy = readfloat(trmbf)
+                                                    vz = readfloat(trmbf)
+                                                    nx = readhalffloat(trmbf)
+                                                    ny = readhalffloat(trmbf)
+                                                    nz = readhalffloat(trmbf)
+                                                    nq = readhalffloat(trmbf)
+                                                    tanx = readhalffloat(trmbf)
+                                                    tany = readhalffloat(trmbf)
+                                                    tanz = readhalffloat(trmbf)
+                                                    tanq = readhalffloat(trmbf)
+                                                    if MorphVertIDs_array[v] != 0:
+                                                        MorphVert_array[MorphVertIDs_array[v]] = [vert_array[MorphVertIDs_array[v]][0] + vx, vert_array[MorphVertIDs_array[v]][1] + vy, vert_array[MorphVertIDs_array[v]][2] + vz]
+                                                        MorphNormal_array[MorphVertIDs_array[v]] = [vert_array[MorphVertIDs_array[v]][0] + nx, vert_array[MorphVertIDs_array[v]][1] + ny, vert_array[MorphVertIDs_array[v]][2] + nz]
+                                                        print(f'{MorphVertIDs_array[v]} {range(vert_buffer_byte_count // 0x1C)}')
+                                                print(f"Group {x} morph {y} end: {hex(ftell(trmbf))}")
+                                                Morphs_array.append(MorphVert_array)
                                             fseek(trmbf, groupret)
                                         fseek(trmbf, group_ret)
                             fseek(trmbf, vert_buffer_ret)                                                          
