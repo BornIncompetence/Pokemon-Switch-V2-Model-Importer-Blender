@@ -2308,7 +2308,6 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                                     if MorphVertIDs_array[v] != 0:
                                                         MorphVert_array[MorphVertIDs_array[v]] = [vert_array[MorphVertIDs_array[v]][0] + vx, vert_array[MorphVertIDs_array[v]][1] + vy, vert_array[MorphVertIDs_array[v]][2] + vz]
                                                         MorphNormal_array[MorphVertIDs_array[v]] = [vert_array[MorphVertIDs_array[v]][0] + nx, vert_array[MorphVertIDs_array[v]][1] + ny, vert_array[MorphVertIDs_array[v]][2] + nz]
-                                                        print(f'{MorphVertIDs_array[v]} {range(vert_buffer_byte_count // 0x1C)}')
                                                 print(f"Group {x} morph {y} end: {hex(ftell(trmbf))}")
                                                 Morphs_array.append(MorphVert_array)
                                             fseek(trmbf, groupret)
