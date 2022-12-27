@@ -2345,6 +2345,8 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                 new_mesh = bpy.data.meshes.new(f"{poly_group_name}_mesh")
                                 new_mesh.from_pydata(vert_array, [], face_array)
                                 new_mesh.update()
+                                for p in new_mesh.polygons:
+                                    p.use_smooth = True
                                 new_object = bpy.data.objects.new(poly_group_name, new_mesh)
                                 if len(MorphName_array) > 0:
                                     sk_basis = new_object.shape_key_add(name='Basis')
