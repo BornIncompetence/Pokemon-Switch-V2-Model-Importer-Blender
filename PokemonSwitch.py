@@ -2284,7 +2284,7 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                             morphbuffergroupsbytecount = readlong(trmbf)
                                             if y == 0:
                                                 for v in range(morphbuffergroupsbytecount // 0x04):
-                                                    MorphVertID = readlong(trmbf) + 1
+                                                    MorphVertID = readlong(trmbf)
                                                     MorphVertIDs_array.append(MorphVertID)
                                             else:
                                                 MorphVert_array = []
