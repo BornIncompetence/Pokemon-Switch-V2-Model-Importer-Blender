@@ -1661,7 +1661,7 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                 fseek(trmsh, poly_group_offset + poly_group_struct_ptr_vis_group_name)
                                 group_name_header_offset = ftell(trmsh) + readlong(trmsh); fseek(trmsh, group_name_header_offset)
                                 group_name_count = readlong(trmsh)
-                                for x in range(group_name_count):
+                                for g in range(group_name_count):
                                     group_name_offset = ftell(trmsh) + readlong(trmsh)
                                     groupoffset_array.append(group_name_offset)
                                     
@@ -2199,8 +2199,8 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                 group_count = readlong(trmbf)
                                 if group_count > 0:
                                     MorphNameNext = 1
-                                    for y in range(group_count):
-                                        fseek(trmsh, groupoffset_array[y])
+                                    for g in range(group_count):
+                                        fseek(trmsh, groupoffset_array[g])
                                         group_namestruct = ftell(trmsh) - readlong(trmsh)
                                         fseek(trmsh, group_namestruct)
                                         groupnamestructlen = readshort(trmsh)
@@ -2212,14 +2212,14 @@ def from_trmdl(filep, trmdl, rare, loadlods, usedds):
                                         else:
                                             raise AssertionError("Unexpected morph group buffer struct length!")
                                         
-                                        fseek(trmsh, groupoffset_array[y] + group_structprtparamname)
+                                        fseek(trmsh, groupoffset_array[g] + group_structprtparamname)
                                         group_nameoffset = ftell(trmsh) + readlong(trmsh)
                                         fseek(trmsh, group_nameoffset)
                                         group_namelen = readlong(trmsh)
                                         group_name = readfixedstring(trmsh, group_namelen)
                                         
                                         
-                                        fseek(trmsh, groupoffset_array[y] + group_structptrparammorph)
+                                        fseek(trmsh, groupoffset_array[g] + group_structptrparammorph)
                                         group_morphoffset = ftell(trmsh) + readlong(trmsh)
                                         fseek(trmsh, group_morphoffset)
                                         group_morphnamecount = readlong(trmsh)
