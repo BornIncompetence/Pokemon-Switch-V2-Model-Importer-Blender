@@ -470,13 +470,13 @@ def from_trmdlsv(filep, trmdl, rare, loadlods, bonestructh):
 
                         new_bone.use_connect = False
                         new_bone.use_inherit_rotation = True
-                        new_bone.use_inherit_scale = True
+                        new_bone.inherit_scale = "FULL"
                         
                         if bonestructh == True:
                             if trskl_bone_struct_ptr_h == 0:
-                                new_bone.use_inherit_scale = True
+                                new_bone.inherit_scale = "FULL"
                             else:
-                                new_bone.use_inherit_scale = False
+                                new_bone.inherit_scale = "NONE"
                         
                         new_bone.use_local_location = True
 
@@ -1150,11 +1150,28 @@ def from_trmdlsv(filep, trmdl, rare, loadlods, bonestructh):
                 material.node_tree.links.new(principled_bsdf.outputs[0], material_output.inputs[0])
 
                 print(f"mat_shader = {mat['mat_shader']}")
+
+                # Principled BSDF inputs are not stable across versions
+                # Neither are their names so I can't just use `inputs.get("Emission")`
+                if bpy.app.version[0] == 3:
+                    bsdf_base_color = 0
+                    bsdf_metallic = 6
+                    bsdf_roughness = 9
+                    bsdf_alpha = 21
+                    bsdf_normal_map = 22
+                    bsdf_emission_color = 19
+                else:
+                    bsdf_base_color = 0
+                    bsdf_metallic = 1
+                    bsdf_roughness = 2
+                    bsdf_alpha = 4
+                    bsdf_normal_map = 5
+                    bsdf_emission_color = 26
                 
                 material.blend_method = ("HASHED")
                 material.shadow_method = ("OPAQUE")
                 
-                color_output = principled_bsdf.inputs[0]
+                color_output = principled_bsdf.inputs[bsdf_base_color]
                 if mat["mat_shader"] == "Unlit":
                     color_output = material_output.inputs[0]
                 if mat["mat_shader"] == "Transparent":
@@ -1306,7 +1323,7 @@ def from_trmdlsv(filep, trmdl, rare, loadlods, bonestructh):
                 material.node_tree.links.new(mix_emcolor2.outputs[0], mix_emcolor3.inputs[1])
                 material.node_tree.links.new(mix_emcolor3.outputs[0], mix_emcolor4.inputs[1])
                 material.node_tree.links.new(mix_emcolor3.outputs[0], mix_emcolor4.inputs[1])
-                material.node_tree.links.new(mix_emcolor4.outputs[0], principled_bsdf.inputs[19])
+                material.node_tree.links.new(mix_emcolor4.outputs[0], principled_bsdf.inputs[bsdf_emission_color])
               
                 
                 separate_color = material.node_tree.nodes.new("ShaderNodeSeparateRGB")
@@ -1332,7 +1349,7 @@ def from_trmdlsv(filep, trmdl, rare, loadlods, bonestructh):
                     alb_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                     alb_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_col0"][:-5] + textureextension))
                     material.node_tree.links.new(alb_image_texture.outputs[0], mix_color1.inputs[1])
-                    material.node_tree.links.new(alb_image_texture.outputs[1],  principled_bsdf.inputs[21])
+                    material.node_tree.links.new(alb_image_texture.outputs[1],  principled_bsdf.inputs[bsdf_alpha])
                     material.node_tree.links.new(combine_xyz.outputs[0], alb_image_texture.inputs[0])
                     if 'hair' in mat["mat_name"] in mat["mat_name"] and basecolor != (1, 1, 1, 1):
                         haircolor = material.node_tree.nodes.new("ShaderNodeMixRGB")
@@ -1378,7 +1395,7 @@ def from_trmdlsv(filep, trmdl, rare, loadlods, bonestructh):
                     material.node_tree.links.new(separate_color2.outputs[1], combine_color2.inputs[1])
                     material.node_tree.links.new(normal_image_texture.outputs[1], combine_color2.inputs[2])
                     material.node_tree.links.new(combine_color2.outputs[0], normal_map2.inputs[1])
-                    material.node_tree.links.new(normal_map2.outputs[0], principled_bsdf.inputs[22])
+                    material.node_tree.links.new(normal_map2.outputs[0], principled_bsdf.inputs[bsdf_normal_map])
 
                     
                 if mat["mat_enable_metallic_map"]:
@@ -1386,20 +1403,20 @@ def from_trmdlsv(filep, trmdl, rare, loadlods, bonestructh):
                     if os.path.exists(os.path.join(filep, mat["mat_mtl0"][:-5] + textureextension)) == True:
                         metalness_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_mtl0"][:-5] + textureextension))
                         metalness_image_texture.image.colorspace_settings.name = "Non-Color"
-                    material.node_tree.links.new(metalness_image_texture.outputs[0], principled_bsdf.inputs[6])
+                    material.node_tree.links.new(metalness_image_texture.outputs[0], principled_bsdf.inputs[bsdf_metallic])
 
                 if mat["mat_enable_emission_color_map"]:
                     emission_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                     if os.path.exists(os.path.join(filep, mat["mat_emi0"][:-5] + textureextension)) == True:
                         emission_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_emi0"][:-5] + textureextension))
-                    material.node_tree.links.new(emission_image_texture.outputs[0], principled_bsdf.inputs[19])                        
+                    material.node_tree.links.new(emission_image_texture.outputs[0], principled_bsdf.inputs[bsdf_emission_color])                        
                     
                 if mat["mat_enable_roughness_map"]:
                     roughness_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                     if os.path.exists(os.path.join(filep, mat["mat_rgh0"][:-5] + textureextension)) == True:
                         roughness_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_rgh0"][:-5] + textureextension))
                         roughness_image_texture.image.colorspace_settings.name = "Non-Color"
-                    material.node_tree.links.new(roughness_image_texture.outputs[0], principled_bsdf.inputs[9])
+                    material.node_tree.links.new(roughness_image_texture.outputs[0], principled_bsdf.inputs[bsdf_roughness])
                     material.node_tree.links.new(combine_xyz.outputs[0], roughness_image_texture.inputs[0])    
                     
                 if mat["mat_enable_ao_map"]:
@@ -1446,7 +1463,7 @@ def from_trmdlsv(filep, trmdl, rare, loadlods, bonestructh):
                     color4 = mix_color4.inputs[0].links[0]
                     material.node_tree.links.remove(color4)
                 if 'eyelash' in mat["mat_name"] and os.path.exists(os.path.join(filep, mat["mat_col0"][:-5] + textureextension)) == False:
-                    material.node_tree.links.remove(principled_bsdf.inputs[0].links[0])
+                    material.node_tree.links.remove(principled_bsdf.inputs[bsdf_base_color].links[0])
                     color_output.default_value = basecolor
 
     if loadlods == False:
@@ -2790,7 +2807,7 @@ def from_trmdl(filep, trmdl, rare, loadlods):
 
                         new_bone.use_connect = False
                         new_bone.use_inherit_rotation = True
-                        new_bone.use_inherit_scale = True
+                        new_bone.inherit_scale = "FULL"
                         new_bone.use_local_location = True
 
                         new_bone.head = (0, 0, 0)
@@ -3455,11 +3472,28 @@ def from_trmdl(filep, trmdl, rare, loadlods):
                 material.node_tree.links.new(principled_bsdf.outputs[0], material_output.inputs[0])
 
                 print(f"mat_shader = {mat['mat_shader']}")
+
+                # Principled BSDF inputs are not stable across versions
+                # Neither are their names so I can't just use `inputs.get("Emission")`
+                if bpy.app.version[0] == 3:
+                    bsdf_base_color = 0
+                    bsdf_metallic = 6
+                    bsdf_roughness = 9
+                    bsdf_alpha = 21
+                    bsdf_normal_map = 22
+                    bsdf_emission_color = 19
+                else:
+                    bsdf_base_color = 0
+                    bsdf_metallic = 1
+                    bsdf_roughness = 2
+                    bsdf_alpha = 4
+                    bsdf_normal_map = 5
+                    bsdf_emission_color = 26
                 
                 material.blend_method = ("HASHED")
                 material.shadow_method = ("OPAQUE")
                 
-                color_output = principled_bsdf.inputs[0]
+                color_output = principled_bsdf.inputs[bsdf_base_color]
                 if mat["mat_shader"] == "Unlit":
                     color_output = material_output.inputs[0]
                 if mat["mat_shader"] == "Transparent":
@@ -3604,7 +3638,7 @@ def from_trmdl(filep, trmdl, rare, loadlods):
                     material.node_tree.links.new(mix_emcolor2.outputs[0], mix_emcolor3.inputs[1])
                     material.node_tree.links.new(mix_emcolor3.outputs[0], mix_emcolor4.inputs[1])
                     material.node_tree.links.new(mix_emcolor3.outputs[0], mix_emcolor4.inputs[1])
-                    material.node_tree.links.new(mix_emcolor4.outputs[0], principled_bsdf.inputs[19]) 
+                    material.node_tree.links.new(mix_emcolor4.outputs[0], principled_bsdf.inputs[bsdf_emission_color]) 
               
                     
                     separate_color = material.node_tree.nodes.new("ShaderNodeSeparateRGB")
@@ -3630,7 +3664,7 @@ def from_trmdl(filep, trmdl, rare, loadlods):
                         alb_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                         alb_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_col0"][:-5] + textureextension))
                         material.node_tree.links.new(alb_image_texture.outputs[0], mix_color1.inputs[1])
-                        material.node_tree.links.new(alb_image_texture.outputs[1],  principled_bsdf.inputs[21])
+                        material.node_tree.links.new(alb_image_texture.outputs[1],  principled_bsdf.inputs[bsdf_alpha])
                         material.node_tree.links.new(combine_xyz.outputs[0], alb_image_texture.inputs[0]) 
 
                     if mat["mat_enable_highlight_map"]:
@@ -3670,31 +3704,31 @@ def from_trmdl(filep, trmdl, rare, loadlods):
                         material.node_tree.links.new(separate_color2.outputs[1], combine_color2.inputs[1])
                         material.node_tree.links.new(normal_image_texture.outputs[1], combine_color2.inputs[2])
                         material.node_tree.links.new(combine_color2.outputs[0], normal_map2.inputs[1])
-                        material.node_tree.links.new(normal_map2.outputs[0], principled_bsdf.inputs[22])
+                        material.node_tree.links.new(normal_map2.outputs[0], principled_bsdf.inputs[bsdf_normal_map])
                         if mat["mat_shader"] == "Transparent":
                             material.node_tree.links.new(normal_map2.outputs[0], reflectionpart5.inputs[1])
                             material.node_tree.links.new(reflectionpart5.outputs[0], reflectionpart6.inputs[1])                            
-                            material.node_tree.links.new(reflectionpart6.outputs[0], principled_bsdf.inputs[21])
+                            material.node_tree.links.new(reflectionpart6.outputs[0], principled_bsdf.inputs[bsdf_alpha])
                         
                     if mat["mat_enable_metallic_map"]:
                         metalness_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                         if os.path.exists(os.path.join(filep, mat["mat_mtl0"][:-5] + textureextension)) == True:
                             metalness_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_mtl0"][:-5] + textureextension))
                             metalness_image_texture.image.colorspace_settings.name = "Non-Color"
-                        material.node_tree.links.new(metalness_image_texture.outputs[0], principled_bsdf.inputs[6])
+                        material.node_tree.links.new(metalness_image_texture.outputs[0], principled_bsdf.inputs[bsdf_metallic])
 
                     if mat["mat_enable_emission_color_map"]:
                         emission_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                         if os.path.exists(os.path.join(filep, mat["mat_emi0"][:-5] + textureextension)) == True:
                             emission_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_emi0"][:-5] + textureextension))
-                        material.node_tree.links.new(emission_image_texture.outputs[0], principled_bsdf.inputs[19])                        
+                        material.node_tree.links.new(emission_image_texture.outputs[0], principled_bsdf.inputs[bsdf_emission_color])                        
                         
                     if mat["mat_enable_roughness_map"]:
                         roughness_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                         if os.path.exists(os.path.join(filep, mat["mat_rgh0"][:-5] + textureextension)) == True:
                             roughness_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_rgh0"][:-5] + textureextension))
                             roughness_image_texture.image.colorspace_settings.name = "Non-Color"
-                        material.node_tree.links.new(roughness_image_texture.outputs[0], principled_bsdf.inputs[9])
+                        material.node_tree.links.new(roughness_image_texture.outputs[0], principled_bsdf.inputs[bsdf_roughness])
                         material.node_tree.links.new(combine_xyz.outputs[0], roughness_image_texture.inputs[0])    
                         
                     if mat["mat_enable_ao_map"]:
@@ -3730,7 +3764,7 @@ def from_trmdl(filep, trmdl, rare, loadlods):
                         if os.path.exists(os.path.join(filep, mat["mat_col0"][:-5] + textureextension)) == True:
                             alb_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_col0"][:-5] + textureextension))
                         material.node_tree.links.new(alb_image_texture.outputs[0], color_output)
-                        material.node_tree.links.new(alb_image_texture.outputs[1],  principled_bsdf.inputs[21])
+                        material.node_tree.links.new(alb_image_texture.outputs[1],  principled_bsdf.inputs[bsdf_alpha])
 
 
 
@@ -3759,30 +3793,30 @@ def from_trmdl(filep, trmdl, rare, loadlods):
                         material.node_tree.links.new(separate_color2.outputs[1], combine_color2.inputs[1])
                         material.node_tree.links.new(normal_image_texture.outputs[1], combine_color2.inputs[2])
                         material.node_tree.links.new(combine_color2.outputs[0], normal_map2.inputs[1])
-                        material.node_tree.links.new(normal_map2.outputs[0], principled_bsdf.inputs[22])
+                        material.node_tree.links.new(normal_map2.outputs[0], principled_bsdf.inputs[bsdf_normal_map])
                         if mat["mat_shader"] == "Transparent":
                             material.node_tree.links.new(normal_map2.outputs[0], reflectionpart5.inputs[1])
-                            material.node_tree.links.new(reflectionpart5.outputs[0], principled_bsdf.inputs[21])
+                            material.node_tree.links.new(reflectionpart5.outputs[0], principled_bsdf.inputs[bsdf_alpha])
 
                     if mat["mat_enable_emission_color_map"]:
                         emission_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                         if os.path.exists(os.path.join(filep, mat["mat_emi0"][:-5] + textureextension)) == True:
                             emission_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_emi0"][:-5] + textureextension))
-                        material.node_tree.links.new(emission_image_texture.outputs[0], principled_bsdf.inputs[19])    
+                        material.node_tree.links.new(emission_image_texture.outputs[0], principled_bsdf.inputs[bsdf_emission_color])    
                         
                     if mat["mat_enable_metallic_map"]:
                         metalness_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                         if os.path.exists(os.path.join(filep, mat["mat_mtl0"][:-5] + textureextension)) == True:
                             metalness_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_mtl0"][:-5] + textureextension))
                             metalness_image_texture.image.colorspace_settings.name = "Non-Color"
-                        material.node_tree.links.new(metalness_image_texture.outputs[0], principled_bsdf.inputs[6])
+                        material.node_tree.links.new(metalness_image_texture.outputs[0], principled_bsdf.inputs[bsdf_metallic])
                         
                     if mat["mat_enable_roughness_map"]:
                         roughness_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
                         if os.path.exists(os.path.join(filep, mat["mat_rgh0"][:-5] + textureextension)) == True:
                             roughness_image_texture.image = bpy.data.images.load(os.path.join(filep, mat["mat_rgh0"][:-5] + textureextension))
                             roughness_image_texture.image.colorspace_settings.name = "Non-Color"
-                        material.node_tree.links.new(roughness_image_texture.outputs[0], principled_bsdf.inputs[9])  
+                        material.node_tree.links.new(roughness_image_texture.outputs[0], principled_bsdf.inputs[bsdf_roughness])  
                         
                     if mat["mat_enable_ao_map"]:
                         ambientocclusion_image_texture = material.node_tree.nodes.new("ShaderNodeTexImage")
